@@ -138,11 +138,18 @@ def ingest_expenses(file_path: str):
 
 def retrieve(query: str, k: int = 5):
     q_vec = embed_text([query])[0]
+    #print("Query vector:", q_vec)
+
     col = get_or_create_collection()
+    #print("Collection:", col)
+
     res = col.query(query_embeddings=[q_vec], n_results=k)  # similarity search
-    print("Similarity search result.")
-    print("Raw query result:", res)
+    print("Similarity search result (this is a list of lists):", res)
     # res contains "documents", "metadatas", "ids", "distances"
+
+
+    # since res is a list of lists, we are iterating over 1 value of each list and 
+    # creating a simple list of dicts. Nothing fancy here.
     hits = []
     for i in range(len(res["ids"][0])):
         hits.append({
@@ -212,22 +219,36 @@ def ask(question: str):
 # main chat function
 def main():
 
-    if len(sys.argv) < 2:
-        print("Usage:\n  python app.py ingest <path_to_csv_or_xlsx>\n  python app.py ask \"your question\"")
-        sys.exit(1)
+    """Main application entry point"""
+    print("💰 Welcome to the Expense Analysis Agent! 💰")
+    print("Powered by Azure OpenAI")
 
-    cmd = sys.argv[1].lower()
-    if cmd == "ingest":
-        if len(sys.argv) < 3:
-            print("Please provide a file path, e.g. data/expenses.csv")
-            sys.exit(1)
-        ingest_expenses(sys.argv[2])
-    elif cmd == "ask":
-        question = " ".join(sys.argv[2:])
-        ask(question)
-    else:
-        print(f"Unknown command: {cmd}")
-        sys.exit(1)
+    while True:
+        print("="*50)
+        print("1. Load and vectorize expense data")
+        print("2. Interactive Chat")
+        print("3. Exit")
+        print(""*50)
+
+        user_input = input("Select an option (1-3): ").strip()
+        if user_input == "1":
+            folder_path = input("Enter folder path (or press Enter for default 'data/sample_expenses'): ").strip()
+            if not folder_path:
+                folder_path = "data/expenses.csv"
+            ingest_expenses(folder_path)
+        
+        elif user_input == "2":
+            print("Enter your question about expenses: ")
+            question = input().strip()
+            ask(question)
+
+        elif user_input == "3":
+            print("👋 Thank you for using the Expense Analysis Agent!")
+            break
+
+        else:
+            print("❌ Invalid option. Please select 1-3.")
+
 
 if __name__ == "__main__":
     main()
